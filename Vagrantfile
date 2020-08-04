@@ -347,7 +347,11 @@ config.vm.define "redis1" do |redis1|
 
       end
     
-    redis1.vm.provision "file", source: "./redis/redis@.service", destination: "/tmp/redis@.service"
+    redis1.vm.provision "file", source: "./files/redis/redis@.service", destination: "/tmp/redis@.service"
+
+    redis1.vm.provision "file", source: "./files/redis/redis1/redis.conf", destination: "/tmp/redis.conf"
+
+    redis1.vm.provision "file", source: "./files/redis/redis1/redis-sentinel.conf", destination: "/tmp/redis-sentinel.conf"
 
     redis1.vm.provision "shell", inline: <<-SHELL
 
@@ -357,9 +361,11 @@ config.vm.define "redis1" do |redis1|
 
        systemctl restart sshd
 
+       sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config; setenforce 0
+
        timedatectl set-timezone Europe/Moscow
 
-       yum install epel-release yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
+       yum install epel-release -y; yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
 
        yum install ntp -y && systemctl start ntpd && systemctl enable ntpd
 
@@ -373,11 +379,11 @@ EOF
 
        yum install audit audispd-plugins policycoreutils-python -y
 
-       sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config; setenforce 0
-
        sudo yum-config-manager --enable remi; sudo yum install redis -y
 
-       mv /tmp/redis@.service /etc/systemd/system
+       mv /tmp/redis@.service /etc/systemd/system; mv /tmp/redis.conf /etc/; mv /tmp/redis-sentinel.conf /etc/
+
+       sudo chown redis:root /etc/redis.conf; sudo chmod 640 /etc/redis.conf; sudo chown redis:root /etc/redis-sentinel.conf; sudo chmod 640 /etc/redis-sentinel.conf; sudo chown root:root /etc/systemd/system/redis@.service; sudo chmod 644 /etc/systemd/system/redis@.service
 
        echo "vm.overcommit_memory=1" >> /etc/sysctl.conf
 
@@ -385,18 +391,15 @@ EOF
 
        echo "fs.file-max=150000" >> /etc/sysctl.conf
 
-       sed -i 's/^bind.*/bind 0.0.0.0/g' /etc/redis.conf
-
        sysctl -w vm.overcommit_memory=1; sysctl -w net.core.somaxconn=512; sysctl -w fs.file-max=150000
 
-       sudo systemctl enable redis@redis; sudo systemctl start redis@redis
+       systemctl daemon-reload; systemctl enable redis@redis && systemctl start redis@redis; systemctl enable redis-sentinel.service && systemctl start redis-sentinel.service
 
     SHELL
 
     end
 
 config.vm.define "redis2" do |redis2|
-
     redis2.vm.box = "centos/7"
 
     redis2.vm.network "private_network", ip: "192.168.10.50"
@@ -410,8 +413,12 @@ config.vm.define "redis2" do |redis2|
       vb.customize ["modifyvm", :id, "--cpus", "2"]
 
       end
+    
+    redis2.vm.provision "file", source: "./files/redis/redis@.service", destination: "/tmp/redis@.service"
 
-    redis2.vm.provision "file", source: "./redis/redis@.service", destination: "/tmp/redis@.service"
+    redis2.vm.provision "file", source: "./files/redis/redis2/redis.conf", destination: "/tmp/redis.conf"
+
+    redis2.vm.provision "file", source: "./files/redis/redis2/redis-sentinel.conf", destination: "/tmp/redis-sentinel.conf"
 
     redis2.vm.provision "shell", inline: <<-SHELL
 
@@ -421,9 +428,11 @@ config.vm.define "redis2" do |redis2|
 
        systemctl restart sshd
 
+       sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config; setenforce 0
+
        timedatectl set-timezone Europe/Moscow
 
-       yum install epel-release yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
+       yum install epel-release -y; yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
 
        yum install ntp -y && systemctl start ntpd && systemctl enable ntpd
 
@@ -437,11 +446,11 @@ EOF
 
        yum install audit audispd-plugins policycoreutils-python -y
 
-       sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config; setenforce 0
-
        sudo yum-config-manager --enable remi; sudo yum install redis -y
 
-       mv /tmp/redis@.service /etc/systemd/system
+       mv /tmp/redis@.service /etc/systemd/system; mv /tmp/redis.conf /etc/; mv /tmp/redis-sentinel.conf /etc/
+
+       sudo chown redis:root /etc/redis.conf; sudo chmod 640 /etc/redis.conf; sudo chown redis:root /etc/redis-sentinel.conf; sudo chmod 640 /etc/redis-sentinel.conf; sudo chown root:root /etc/systemd/system/redis@.service; sudo chmod 644 /etc/systemd/system/redis@.service
 
        echo "vm.overcommit_memory=1" >> /etc/sysctl.conf
 
@@ -451,16 +460,13 @@ EOF
 
        sysctl -w vm.overcommit_memory=1; sysctl -w net.core.somaxconn=512; sysctl -w fs.file-max=150000
 
-       sed -i 's/^bind.*/bind 0.0.0.0/g' /etc/redis.conf
-
-       sudo systemctl enable redis@redis; sudo systemctl start redis@redis
+       systemctl daemon-reload; systemctl enable redis@redis && systemctl start redis@redis; systemctl enable redis-sentinel.service && systemctl start redis-sentinel.service
 
     SHELL
 
     end
 
     config.vm.define "redis3" do |redis3|
-
     redis3.vm.box = "centos/7"
 
     redis3.vm.network "private_network", ip: "192.168.10.51"
@@ -474,8 +480,12 @@ EOF
       vb.customize ["modifyvm", :id, "--cpus", "2"]
 
       end
+    
+    redis3.vm.provision "file", source: "./files/redis/redis@.service", destination: "/tmp/redis@.service"
 
-    redis3.vm.provision "file", source: "./redis/redis@.service", destination: "/tmp/redis@.service"
+    redis3.vm.provision "file", source: "./files/redis/redis3/redis.conf", destination: "/tmp/redis.conf"
+
+    redis3.vm.provision "file", source: "./files/redis/redis3/redis-sentinel.conf", destination: "/tmp/redis-sentinel.conf"
 
     redis3.vm.provision "shell", inline: <<-SHELL
 
@@ -485,9 +495,11 @@ EOF
 
        systemctl restart sshd
 
+       sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config; setenforce 0
+
        timedatectl set-timezone Europe/Moscow
 
-       yum install epel-release yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
+       yum install epel-release -y; yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y
 
        yum install ntp -y && systemctl start ntpd && systemctl enable ntpd
 
@@ -501,11 +513,11 @@ EOF
 
        yum install audit audispd-plugins policycoreutils-python -y
 
-       sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config; setenforce 0
-
        sudo yum-config-manager --enable remi; sudo yum install redis -y
 
-       mv /tmp/redis@.service /etc/systemd/system
+       mv /tmp/redis@.service /etc/systemd/system; mv /tmp/redis.conf /etc/; mv /tmp/redis-sentinel.conf /etc/
+
+       sudo chown redis:root /etc/redis.conf; sudo chmod 640 /etc/redis.conf; sudo chown redis:root /etc/redis-sentinel.conf; sudo chmod 640 /etc/redis-sentinel.conf; sudo chown root:root /etc/systemd/system/redis@.service; sudo chmod 644 /etc/systemd/system/redis@.service
 
        echo "vm.overcommit_memory=1" >> /etc/sysctl.conf
 
@@ -515,9 +527,8 @@ EOF
 
        sysctl -w vm.overcommit_memory=1; sysctl -w net.core.somaxconn=512; sysctl -w fs.file-max=150000
 
-       sed -i 's/^bind.*/bind 0.0.0.0/g' /etc/redis.conf
+       systemctl daemon-reload; systemctl enable redis@redis && systemctl start redis@redis; systemctl enable redis-sentinel.service && systemctl start redis-sentinel.service
 
-       sudo systemctl enable redis@redis; sudo systemctl start redis@redis
     SHELL
 
     end
