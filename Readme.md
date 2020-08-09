@@ -92,7 +92,7 @@ Balancer3 и Balancer4 также могут проксировать SQL зап
 
 ### Веб-интерфейс сайта:
 
-ProxySQL используется порт 6033 для проксирования запросов сайта, и порт 6032 для администрирования.
+ProxySQL использует порт 6033 для проксирования запросов сайта, и порт 6032 для администрирования.
 
 ![Image 9](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/wp.png)
 
