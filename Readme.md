@@ -17,7 +17,7 @@ Vagrant и Ansible работают в парадигме "Инфрастукт�
 
 ### Схема:
 
-![Image 12](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/schema_project.png)
+![Image 12](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/schema_project2.png)
 
 ### Состав проекта:
 
