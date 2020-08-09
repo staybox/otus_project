@@ -15,6 +15,10 @@
 
 Vagrant и Ansible работают в парадигме "Инфрастуктура как код"
 
+### Схема:
+
+![Image 12](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/schema_project.png)
+
 ### Состав проекта:
 
 1. Балансировщики нагрузки (http), VIP: 192.168.10.39
@@ -101,10 +105,6 @@ ProxySQL использует порт 6033 для проксирования з
 ![Image 10](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/wp3.png)
 
 ![Image 11](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/wp2.png)
-
-### Схема:
-
-![Image 12](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/schema_project.png)
 
 ### Как запустить:
 - ```git clone git@github.com:staybox/otus_project.git && cd otus_project && vagrant up percona1 percona2 percona3 redis1 redis2 redis3 balancer3 balancer4 glusterfs1 glusterfs2 glusterfs3 && export ANSIBLE_CONFIG=$(pwd)/ansible-gluster/ansible.cfg && ansible-playbook ansible-gluster/provision.yml && vagrant up backend1 backend2 web1 web2 balancer1 balancer2```
