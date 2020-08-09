@@ -10,13 +10,13 @@ percona3.vm.box = "centos/7"
 
     percona3.vm.provider :virtualbox do |vb|
 
-      vb.customize ["modifyvm", :id, "--memory", "256"]
+      vb.customize ["modifyvm", :id, "--memory", "512"]
 
       vb.customize ["modifyvm", :id, "--cpus", "2"]
 
       end
     
-    #percona3.vm.provision "file", source: "./redis/redis@.service", destination: "/tmp/redis@.service"
+    percona3.vm.provision "file", source: "./files/percona3/wsrep.cnf", destination: "/tmp/wsrep.cnf"
 
     percona3.vm.provision "shell", inline: <<-SHELL
 
@@ -26,9 +26,9 @@ percona3.vm.box = "centos/7"
 
        systemctl restart sshd
 
-       timedatectl set-timezone Europe/Moscow
+       sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config; setenforce 0
 
-       yum install ntp -y && systemctl start ntpd && systemctl enable ntpd
+       timedatectl set-timezone Europe/Moscow
 
 cat <<EOF >> /etc/hosts
 192.168.10.55 percona1
@@ -36,25 +36,16 @@ cat <<EOF >> /etc/hosts
 192.168.10.57 percona3
 EOF
 
-       yum install audit audispd-plugins policycoreutils-python -y
+       yum install epel-release -y; yum install https://repo.percona.com/yum/percona-release-latest.noarch.rpm -y; yum install ntp yum-utils nano wget -y && systemctl start ntpd && systemctl enable ntpd; yum install audit audispd-plugins policycoreutils-python -y
 
-       sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config; setenforce 0
+       yum install Percona-XtraDB-Cluster-57 sshpass -y; 
+       
+       mv /etc/percona-xtradb-cluster.conf.d/wsrep.cnf /etc/percona-xtradb-cluster.conf.d/wsrep.cnf.bak; mv /tmp/wsrep.cnf /etc/percona-xtradb-cluster.conf.d/wsrep.cnf
+       
+       sudo chown root:root /etc/percona-xtradb-cluster.conf.d/wsrep.cnf; sudo chmod 644 /etc/percona-xtradb-cluster.conf.d/wsrep.cnf;
+       
+       systemctl enable mysql && systemctl start mysql; sleep 10; sshpass -p "vagrant" ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no vagrant@192.168.10.55 "sudo systemctl stop mysql@bootstrap.service; sudo systemctl start mysql";
 
-       #sudo yum-config-manager --enable remi; sudo yum install redis -y
-
-       #mv /tmp/redis@.service /etc/systemd/system
-
-       #echo "vm.overcommit_memory=1" >> /etc/sysctl.conf
-
-       #echo "net.core.somaxconn=512" >> /etc/sysctl.conf
-
-       #echo "fs.file-max=150000" >> /etc/sysctl.conf
-
-       #sed -i 's/^bind.*/bind 0.0.0.0/g' /etc/redis.conf
-
-       #sysctl -w vm.overcommit_memory=1; sysctl -w net.core.somaxconn=512; sysctl -w fs.file-max=150000
-
-       #sudo systemctl enable redis@redis; sudo systemctl start redis@redis
 
     SHELL
 
@@ -70,13 +61,13 @@ percona2.vm.box = "centos/7"
 
     percona2.vm.provider :virtualbox do |vb|
 
-      vb.customize ["modifyvm", :id, "--memory", "256"]
+      vb.customize ["modifyvm", :id, "--memory", "512"]
 
       vb.customize ["modifyvm", :id, "--cpus", "2"]
 
       end
     
-    #percona2.vm.provision "file", source: "./redis/redis@.service", destination: "/tmp/redis@.service"
+    percona2.vm.provision "file", source: "./files/percona2/wsrep.cnf", destination: "/tmp/wsrep.cnf"
 
     percona2.vm.provision "shell", inline: <<-SHELL
 
@@ -88,33 +79,23 @@ percona2.vm.box = "centos/7"
 
        timedatectl set-timezone Europe/Moscow
 
-       yum install ntp -y && systemctl start ntpd && systemctl enable ntpd
+       sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config; setenforce 0
+
+       yum install epel-release -y; yum install https://repo.percona.com/yum/percona-release-latest.noarch.rpm -y; yum install ntp yum-utils nano wget -y && systemctl start ntpd && systemctl enable ntpd; yum install audit audispd-plugins policycoreutils-python -y
+
+       yum install Percona-XtraDB-Cluster-57 -y; 
+
+       mv /etc/percona-xtradb-cluster.conf.d/wsrep.cnf /etc/percona-xtradb-cluster.conf.d/wsrep.cnf.bak; mv /tmp/wsrep.cnf /etc/percona-xtradb-cluster.conf.d/wsrep.cnf
+       
+       sudo chown root:root /etc/percona-xtradb-cluster.conf.d/wsrep.cnf; sudo chmod 644 /etc/percona-xtradb-cluster.conf.d/wsrep.cnf;
+       
+       systemctl enable mysql && systemctl start mysql
 
 cat <<EOF >> /etc/hosts
 192.168.10.55 percona1
 192.168.10.56 percona2
 192.168.10.57 percona3
 EOF
-
-       yum install audit audispd-plugins policycoreutils-python -y
-
-       sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config; setenforce 0
-
-       #sudo yum-config-manager --enable remi; sudo yum install redis -y
-
-       #mv /tmp/redis@.service /etc/systemd/system
-
-       #echo "vm.overcommit_memory=1" >> /etc/sysctl.conf
-
-       #echo "net.core.somaxconn=512" >> /etc/sysctl.conf
-
-       #echo "fs.file-max=150000" >> /etc/sysctl.conf
-
-       #sed -i 's/^bind.*/bind 0.0.0.0/g' /etc/redis.conf
-
-       #sysctl -w vm.overcommit_memory=1; sysctl -w net.core.somaxconn=512; sysctl -w fs.file-max=150000
-
-       #sudo systemctl enable redis@redis; sudo systemctl start redis@redis
 
     SHELL
 
@@ -131,13 +112,13 @@ percona1.vm.box = "centos/7"
 
     percona1.vm.provider :virtualbox do |vb|
 
-      vb.customize ["modifyvm", :id, "--memory", "256"]
+      vb.customize ["modifyvm", :id, "--memory", "512"]
 
       vb.customize ["modifyvm", :id, "--cpus", "2"]
 
       end
     
-    #percona1.vm.provision "file", source: "./redis/redis@.service", destination: "/tmp/redis@.service"
+    percona1.vm.provision "file", source: "./files/percona1/wsrep.cnf", destination: "/tmp/wsrep.cnf"
 
     percona1.vm.provision "shell", inline: <<-SHELL
 
@@ -147,35 +128,59 @@ percona1.vm.box = "centos/7"
 
        systemctl restart sshd
 
+       sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config; setenforce 0
+
        timedatectl set-timezone Europe/Moscow
 
-       yum install ntp -y && systemctl start ntpd && systemctl enable ntpd
+       yum install epel-release -y; yum install https://repo.percona.com/yum/percona-release-latest.noarch.rpm -y; yum install ntp yum-utils nano wget -y && systemctl start ntpd && systemctl enable ntpd; yum install audit audispd-plugins policycoreutils-python -y
+
+       sudo yum install Percona-XtraDB-Cluster-57 -y; 
+       
+       systemctl start mysql; systemctl enable mysql; password=$(cat /var/log/mysqld.log | grep 'root@localhost:' | awk '{print $11}'); echo -e "[client]\n\ruser=\"root\"\n\rpassword=\"$password\"" > /home/vagrant/my.cnf
+
+       mysql --defaults-file=/home/vagrant/my.cnf  -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'rootPass';" --connect-expired-password; systemctl stop mysql; password="rootPass"
+
+       echo -e "[client]\n\ruser=\"root\"\n\rpassword=\"$password\"" > /home/vagrant/my.cnf
+
+       mv /etc/percona-xtradb-cluster.conf.d/wsrep.cnf /etc/percona-xtradb-cluster.conf.d/wsrep.cnf.bak; mv /tmp/wsrep.cnf /etc/percona-xtradb-cluster.conf.d/wsrep.cnf
+
+       sudo chown root:root /etc/percona-xtradb-cluster.conf.d/wsrep.cnf; sudo chmod 644 /etc/percona-xtradb-cluster.conf.d/wsrep.cnf;
+
+       systemctl start mysql@bootstrap.service; mysql --defaults-file=/home/vagrant/my.cnf  -e "CREATE USER 'sstuser'@'localhost' IDENTIFIED BY 's3cretPass';" --connect-expired-password
+
+       mysql --defaults-file=/home/vagrant/my.cnf  -e "GRANT RELOAD, LOCK TABLES, PROCESS, REPLICATION CLIENT ON *.* TO 'sstuser'@'localhost';" --connect-expired-password
+
+       mysql --defaults-file=/home/vagrant/my.cnf  -e "FLUSH PRIVILEGES;" --connect-expired-password
+
+       curl -OL -o /home/vagrant/addition_to_sys.sql https://gist.github.com/lefred/77ddbde301c72535381ae7af9f968322/raw/5e40b03333a3c148b78aa348fd2cd5b5dbb36e4d/addition_to_sys.sql
+
+       mysql --defaults-file=/home/vagrant/my.cnf < /home/vagrant/addition_to_sys.sql --connect-expired-password
+
+       mysql --defaults-file=/home/vagrant/my.cnf  -e "CREATE USER 'admin-proxysql'@'%' IDENTIFIED BY 'rootPass';" --connect-expired-password
+
+       mysql --defaults-file=/home/vagrant/my.cnf  -e "CREATE USER 'check-health'@'%' IDENTIFIED BY '';" --connect-expired-password
+
+       mysql --defaults-file=/home/vagrant/my.cnf -e "GRANT ALL PRIVILEGES ON *.* to 'admin-proxysql'@'%' WITH GRANT OPTION;" --connect-expired-password
+
+       mysql --defaults-file=/home/vagrant/my.cnf  -e "FLUSH PRIVILEGES;" --connect-expired-password
+
+       mysql --defaults-file=/home/vagrant/my.cnf  -e "CREATE DATABASE wordpress;" --connect-expired-password
+
+       mysql --defaults-file=/home/vagrant/my.cnf  -e "CREATE USER 'monitor'@'192.%' IDENTIFIED BY 'monitor';" --connect-expired-password
+
+       mysql --defaults-file=/home/vagrant/my.cnf  -e "GRANT SELECT on sys.* to 'monitor'@'192.%';" --connect-expired-password
+
+       mysql --defaults-file=/home/vagrant/my.cnf  -e "CREATE USER 'play'@'192.%' IDENTIFIED BY 'play';" --connect-expired-password
+
+       mysql --defaults-file=/home/vagrant/my.cnf  -e "GRANT ALL PRIVILEGES on wordpress.* to 'play'@'192.%';" --connect-expired-password
+
+       mysql --defaults-file=/home/vagrant/my.cnf  -e "FLUSH PRIVILEGES;" --connect-expired-password
 
 cat <<EOF >> /etc/hosts
 192.168.10.55 percona1
 192.168.10.56 percona2
 192.168.10.57 percona3
 EOF
-
-       yum install audit audispd-plugins policycoreutils-python -y
-
-       sed -i 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config; setenforce 0
-
-       #sudo yum-config-manager --enable remi; sudo yum install redis -y
-
-       #mv /tmp/redis@.service /etc/systemd/system
-
-       #echo "vm.overcommit_memory=1" >> /etc/sysctl.conf
-
-       #echo "net.core.somaxconn=512" >> /etc/sysctl.conf
-
-       #echo "fs.file-max=150000" >> /etc/sysctl.conf
-
-       #sed -i 's/^bind.*/bind 0.0.0.0/g' /etc/redis.conf
-
-       #sysctl -w vm.overcommit_memory=1; sysctl -w net.core.somaxconn=512; sysctl -w fs.file-max=150000
-
-       #sudo systemctl enable redis@redis; sudo systemctl start redis@redis
 
     SHELL
 
@@ -869,9 +874,9 @@ EOF
 
     sudo chown root:root /etc/nginx/nginx.conf; sudo chmod 644 /etc/nginx/nginx.conf; sudo chown root:root /etc/systemd/system/glusterfs.timer; sudo chmod 644 /etc/systemd/system/glusterfs.timer; sudo chown root:root /etc/systemd/system/glusterfs.service; sudo chmod 644 /etc/systemd/system/glusterfs.service;  
 
-    systemctl daemon-reload; systemctl enable glusterfs.timer
+    sudo systemctl daemon-reload; sudo systemctl enable glusterfs.timer
     
-    modprobe fuse
+    sudo modprobe fuse
 
     mkdir /mnt/gluster; echo "192.168.10.44:/gv0 /mnt/gluster glusterfs _netdev 0 0" >> /etc/fstab; mount -a
 
@@ -932,7 +937,7 @@ config.vm.define "web2" do |web2|
 
     sudo chown root:root /etc/nginx/nginx.conf; sudo chmod 644 /etc/nginx/nginx.conf; sudo chown root:root /etc/systemd/system/glusterfs.timer; sudo chmod 644 /etc/systemd/system/glusterfs.timer; sudo chown root:root /etc/systemd/system/glusterfs.service; sudo chmod 644 /etc/systemd/system/glusterfs.service;  
 
-    systemctl daemon-reload; systemctl enable glusterfs.timer
+    sudo systemctl daemon-reload; sudo systemctl enable glusterfs.timer
     
     modprobe fuse
 
@@ -971,6 +976,8 @@ config.vm.define "backend1" do |backend1|
 
     backend1.vm.provision "file", source: "./files/php.ini", destination: "/tmp/php.ini"
 
+    backend1.vm.provision "file", source: "./files/proxysql-admin.cnf", destination: "/tmp/proxysql-admin.cnf"
+
     backend1.vm.provision "shell", inline: <<-SHELL
 
        mkdir -p ~root/.ssh; cp ~vagrant/.ssh/auth* ~root/.ssh
@@ -987,7 +994,7 @@ config.vm.define "backend1" do |backend1|
 
        sudo chown root:root /etc/systemd/system/glusterfs.timer; sudo chmod 644 /etc/systemd/system/glusterfs.timer; sudo chown root:root /etc/systemd/system/glusterfs.service; sudo chmod 644 /etc/systemd/system/glusterfs.service;  
 
-       systemctl daemon-reload; systemctl enable glusterfs.timer
+       sudo systemctl daemon-reload; sudo systemctl enable glusterfs.timer
 
        yum install epel-release -y; yum install glusterfs-fuse -y; modprobe fuse; mkdir /mnt/gluster; echo "192.168.10.44:/gv0 /mnt/gluster glusterfs _netdev 0 0" >> /etc/fstab; mount -a
        
@@ -1003,7 +1010,11 @@ config.vm.define "backend1" do |backend1|
 
        mv /tmp/www.conf /etc/opt/remi/php72/php-fpm.d/www.conf; mv /tmp/php.ini /etc/opt/remi/php72/php.ini; chown root:root /etc/opt/remi/php72/php-fpm.d/www.conf; chown root:root /etc/opt/remi/php72/php.ini; sudo chmod 644 /etc/opt/remi/php72/php-fpm.d/www.conf; sudo chmod 644 /etc/opt/remi/php72/php.ini;  
 
+       mv /tmp/proxysql-admin.cnf /etc/proxysql-admin.cnf; sudo chown root:proxysql /etc/proxysql-admin.cnf; sudo chmod 640 /etc/proxysql-admin.cnf;
+       
        systemctl enable php72-php-fpm.service && systemctl start php72-php-fpm.service
+
+       echo n | sudo proxysql-admin --config-file=/etc/proxysql-admin.cnf --enable && sudo /usr/bin/proxysql-admin --syncusers
 
 
     SHELL
@@ -1034,6 +1045,8 @@ config.vm.define "backend1" do |backend1|
 
     backend2.vm.provision "file", source: "./files/php.ini", destination: "/tmp/php.ini"
 
+    backend2.vm.provision "file", source: "./files/proxysql-admin.cnf", destination: "/tmp/proxysql-admin.cnf"
+
     backend2.vm.provision "shell", inline: <<-SHELL
 
        mkdir -p ~root/.ssh; cp ~vagrant/.ssh/auth* ~root/.ssh
@@ -1050,7 +1063,7 @@ config.vm.define "backend1" do |backend1|
 
        sudo chown root:root /etc/systemd/system/glusterfs.timer; sudo chmod 644 /etc/systemd/system/glusterfs.timer; sudo chown root:root /etc/systemd/system/glusterfs.service; sudo chmod 644 /etc/systemd/system/glusterfs.service;  
 
-       systemctl daemon-reload; systemctl enable glusterfs.timer
+       sudo systemctl daemon-reload; sudo systemctl enable glusterfs.timer
 
        yum install epel-release -y; yum install glusterfs-fuse -y; modprobe fuse; mkdir /mnt/gluster; echo "192.168.10.44:/gv0 /mnt/gluster glusterfs _netdev 0 0" >> /etc/fstab; mount -a
        
@@ -1066,6 +1079,10 @@ config.vm.define "backend1" do |backend1|
 
        mv /tmp/www.conf /etc/opt/remi/php72/php-fpm.d/www.conf; mv /tmp/php.ini /etc/opt/remi/php72/php.ini; chown root:root /etc/opt/remi/php72/php-fpm.d/www.conf; chown root:root /etc/opt/remi/php72/php.ini; sudo chmod 644 /etc/opt/remi/php72/php-fpm.d/www.conf; sudo chmod 644 /etc/opt/remi/php72/php.ini;  
 
+       mv /tmp/proxysql-admin.cnf /etc/proxysql-admin.cnf; sudo chown root:proxysql /etc/proxysql-admin.cnf; sudo chmod 640 /etc/proxysql-admin.cnf;
+
+       echo n | sudo proxysql-admin --config-file=/etc/proxysql-admin.cnf --enable && sudo /usr/bin/proxysql-admin --syncusers
+       
        systemctl enable php72-php-fpm.service && systemctl start php72-php-fpm.service
 
 

@@ -6,4 +6,4 @@ OnStartupSec=30
 Unit=glusterfs.service
 
 [Install]
-WantedBy=times.target
+WantedBy=timers.target

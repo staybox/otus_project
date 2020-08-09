@@ -36,10 +36,9 @@
       user:
         name: nginx
         uid: 2000
-        group: nginx
         shell: /sbin/nologin
         append: yes
-        comment: "Nnginx nologin user"
+        comment: "Nginx nologin user"
         state: present
       become: true
   
@@ -74,7 +73,7 @@
       when: 
         - ansible_hostname == 'glusterfs1'
         - not stat_result.stat.exists
-      shell: wget https://ru.wordpress.org/latest-ru_RU.zip -P /mnt/gluster/; unzip /mnt/gluster/latest-ru_RU.zip -d /mnt/gluster/ && rm -rf /mnt/gluster/latest-ru_RU.zip; cp -R /mnt/gluster/wordpress/* /mnt/gluster/; rm -rf /mnt/gluster/wordpress; chown nginx:nginx /mnt/gluster/*; chmod 664 /mnt/gluster/*
+      shell: wget https://ru.wordpress.org/latest-ru_RU.zip -P /mnt/gluster/; unzip /mnt/gluster/latest-ru_RU.zip -d /mnt/gluster/ && rm -rf /mnt/gluster/latest-ru_RU.zip; cp -R /mnt/gluster/wordpress/* /mnt/gluster/; rm -rf /mnt/gluster/wordpress; chown -R nginx:nginx /mnt/gluster/*; chmod -R 750 /mnt/gluster/*
       args:
         warn: no
 

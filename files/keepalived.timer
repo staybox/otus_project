@@ -2,7 +2,7 @@
 Description=KeepAlived timer on boot
 
 [Timer]
-OnBootSec=20
+OnBootSec=30
 Unit=keepalived.service
 
 [Install]
