@@ -72,33 +72,39 @@ Vagrant и Ansible работают в парадигме "Инфрастукт�
 
 6. GlusterFS - кластерная файловая система. Образует файловый кластер для файлового хранилища (где хранятся файлы сайта). Все веб-сервера и сервера приложений имеют доступ к файловому хранилищу для того чтобы сайт работал. На веб-серверах и серверах приложений установлен клиент GlusterFS.
 
+![Image 4](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/gluster.png)
+
 7. Redis (6 версия) - NoSQL БД для хранения сессий и кэширования данных. В нашей схеме используется 1 мастер и 2 слэйва. В случае падения мастера, происходит переключение. За переключением следить Sentinel. Хранит данные в ОЗУ, за счет чего быстро записывает и отдает данные. Периодически сохраняет данные на диск.
+
+![Image 5](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/redis-cli.png)
+
+![Image 6](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/sentinel.png)
 
 8. Percona Multi-Master MySQL - сервера БД, которые хранят данные сайта в таблицах. Каждый читает и записывает с/на каждого.
 
-![Image 4](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/percona.png)
+![Image 7](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/percona.png)
 
 Balancer3 и Balancer4 также могут проксировать SQL запросы, однако HAProxy не умеет понимать тип SQL запроса. Проксирование идет исходя из доступности нод.
 Также же на этих нодах проксируется Redis, в данном случае HAProxy определяет кто из нод мастер и записывает только на мастер.
 Как видно на изображении ниже, 2 Slave сервера redis помечены красным, это нормально, так как на них не отправляются запросы. Запись может выполняться только на мастер сервер. Также видно что настроено MySQL проксирование (как резервное, а также для демонстрации возможностей), исходя из настроек весов, запросы отправляются всегда на один сервер. 
 
-![Image 5](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/haproxy-redis.png)
+![Image 8](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/haproxy-redis.png)
 
 ### Веб-интерфейс сайта:
 
 ProxySQL используется порт 6033 для проксирования запросов сайта, и порт 6032 для администрирования.
 
-![Image 6](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/wp.png)
+![Image 9](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/wp.png)
 
 На слайде ниже предлагается создать файл конфигурации для связи с БД. Чтобы не создавать файл вручную нужно выставить на 2 файла права 777, но предоставлять такие права файлам не безопасно, поэтому мы создаем такой файл вручную. Права 750.
 
-![Image 7](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/wp3.png)
+![Image 10](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/wp3.png)
 
-![Image 8](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/wp2.png)
+![Image 11](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/wp2.png)
 
 ### Схема:
 
-![Image 9](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/schema_project.png)
+![Image 12](https://raw.githubusercontent.com/staybox/otus_project/master/screenshots/schema_project.png)
 
 ### Как запустить:
 - ```git clone git@github.com:staybox/otus_project.git && cd otus_project && vagrant up percona1 percona2 percona3 redis1 redis2 redis3 balancer3 balancer4 glusterfs1 glusterfs2 glusterfs3 && export ANSIBLE_CONFIG=$(pwd)/ansible-gluster/ansible.cfg && ansible-playbook ansible-gluster/provision.yml && vagrant up backend1 backend2 web1 web2 balancer1 balancer2```
